@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Cloud Inventory — ROI Business Case Builder</title>
+<meta name="description" content="Build executive-ready ROI business cases for Cloud Inventory Platform. Includes NPV, one-time costs, discovery guide, and competitive displacement."/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<link rel="stylesheet" href="exec.css"/>
+</head>
+<body>
+
+<!-- ── Top bar ── -->
+<header class="topbar">
+  <button class="hamburger" onclick="toggleSidebar()" aria-label="Toggle menu">
+    <span></span><span></span><span></span>
+  </button>
+  <img class="topbar-logo" src="ci-logo-negative.png" alt="Cloud Inventory" onerror="this.style.display='none'"/>
+  <div class="topbar-divider"></div>
+  <span class="topbar-title">ROI Business Case Builder</span>
+  <div class="topbar-right">
+    <span class="topbar-date" id="todayDate"></span>
+  </div>
+</header>
+
+<!-- ── Live KPI bar ── -->
+<div class="livebar" id="livebar">
+  <div class="lb-cell">
+    <div class="lb-label">Annual benefit</div>
+    <div class="lb-value pos" id="lb-benefit">—</div>
+  </div>
+  <div class="lb-cell">
+    <div class="lb-label">Year 1 ROI</div>
+    <div class="lb-value" id="lb-roi">—</div>
+  </div>
+  <div class="lb-cell">
+    <div class="lb-label">3-yr NPV</div>
+    <div class="lb-value pos" id="lb-npv3">—</div>
+  </div>
+  <div class="lb-cell">
+    <div class="lb-label">5-yr NPV</div>
+    <div class="lb-value pos" id="lb-npv5">—</div>
+  </div>
+</div>
+
+<!-- ── Sidebar overlay (mobile) ── -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+<!-- ── App shell ── -->
+<div class="app-shell">
+
+  <!-- ── Sidebar navigation ── -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-section-label">Workflow</div>
+
+    <button class="nav-item active" onclick="switchTab('calc')" id="nav-calc">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <rect x="1" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
+        <rect x="9" y="1" width="6" height="6" rx="1.5" fill="currentColor"/>
+        <rect x="1" y="9" width="6" height="6" rx="1.5" fill="currentColor"/>
+        <rect x="9" y="9" width="6" height="6" rx="1.5" fill="currentColor"/>
+      </svg>
+      Calculator
+    </button>
+
+    <button class="nav-item" onclick="switchTab('disc')" id="nav-disc">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 1C4.13 1 1 3.91 1 7.5c0 1.66.62 3.18 1.64 4.34L2 15l3.29-1.03A7.07 7.07 0 008 14c3.87 0 7-2.91 7-6.5S11.87 1 8 1z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+        <circle cx="5.5" cy="7.5" r=".75" fill="currentColor"/>
+        <circle cx="8" cy="7.5" r=".75" fill="currentColor"/>
+        <circle cx="10.5" cy="7.5" r=".75" fill="currentColor"/>
+      </svg>
+      Discovery guide
+    </button>
+
+    <button class="nav-item" onclick="switchTab('comp')" id="nav-comp">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <path d="M8 1l2 4 4.5.65-3.25 3.17.77 4.48L8 11.1l-4.02 2.2.77-4.48L1.5 5.65 6 5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+      Competitive
+    </button>
+
+    <button class="nav-item" onclick="switchTab('exec')" id="nav-exec">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+        <line x1="5" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="5" y1="8" x2="11" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+        <line x1="5" y1="11" x2="8" y2="11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+      </svg>
+      Executive view
+    </button>
+
+    <div class="sidebar-section-label" style="margin-top:8px;">Records</div>
+
+    <button class="nav-item" onclick="switchTab('saved')" id="nav-saved">
+      <svg class="nav-icon" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+        <rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+        <path d="M5 1v5l3-2 3 2V1" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+      Saved scenarios
+      <span class="nav-badge" id="savedCount">0</span>
+    </button>
+
+    <div class="sidebar-footer">
+      Cloud Inventory · Nextworld Company
+    </div>
+  </nav>
+
+  <!-- ── Main content ── -->
+  <main class="main-content">
+
+    <!-- ══════════════════════════════════
+         CALCULATOR
+    ══════════════════════════════════ -->
+    <div id="tab-calc" class="pane active">
+      <div class="page-header">
+        <div>
+          <div class="page-title">ROI Calculator</div>
+          <div class="page-subtitle">Enter prospect details to build a business case. Industry defaults apply automatically.</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- LEFT: Prospect + Costs -->
+        <div>
+          <!-- Accordion: Prospect Details -->
+          <div class="accordion">
+            <button class="acc-head open" onclick="toggleAcc(this)">
+              <div class="acc-left">
+                <span class="acc-dot"></span>
+                <div>
+                  <div class="acc-title">Prospect details</div>
+                  <div class="acc-sub">Company, industry, revenue</div>
+                </div>
+              </div>
+              <svg class="acc-chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="acc-body">
+              <div class="two-col" style="margin-top:12px;">
+                <div class="field">
+                  <label>Scenario name</label>
+                  <input type="text" id="scenarioName" placeholder="e.g. ACME Corp – Q3"/>
+                </div>
+                <div class="field">
+                  <label>Company name</label>
+                  <input type="text" id="companyName" placeholder="Prospect company"/>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="field">
+                  <label>Rep / SE name</label>
+                  <input type="text" id="repName" placeholder="Your name"/>
+                </div>
+                <div class="field">
+                  <label>Industry</label>
+                  <select id="industry" onchange="applyDefaults()">
+                    <option value="">— Select industry —</option>
+                    <option value="telecom">Telecommunications</option>
+                    <option value="mfg">Manufacturing</option>
+                    <option value="construction">Engineering &amp; Construction</option>
+                    <option value="oil">Oil &amp; Gas</option>
+                    <option value="mining">Minerals &amp; Mining</option>
+                    <option value="distribution">Distribution &amp; 3PL</option>
+                    <option value="food">Food &amp; Beverage</option>
+                    <option value="retail">Retail</option>
+                  </select>
+                </div>
+              </div>
+              <div class="field">
+                <label>Current competing solution</label>
+                <select id="competitor">
+                  <option value="">— Select if applicable —</option>
+                  <option value="sap">SAP WM / Extended WH Mgmt</option>
+                  <option value="rf">Legacy RF / paper-based</option>
+                  <option value="oracle">Oracle WMS</option>
+                  <option value="excel">Spreadsheets / manual</option>
+                  <option value="erp">ERP-native inventory module</option>
+                  <option value="other">Other WMS</option>
+                </select>
+              </div>
+              <div class="two-col">
+                <div class="field">
+                  <label title="Used for OTIF value-at-risk calculation">Annual revenue ($)</label>
+                  <input type="number" id="revenue" placeholder="e.g. 50,000,000" oninput="recalc()"/>
+                </div>
+                <div class="field">
+                  <label title="All users who interact with inventory: warehouse, field, office">Inventory users</label>
+                  <input type="number" id="userCount" placeholder="e.g. 50" oninput="recalc()"/>
+                </div>
+              </div>
+              <div class="two-col">
+                <div class="field">
+                  <label title="Include salary, benefits, and overhead">Avg. labor cost / user / yr ($)</label>
+                  <input type="number" id="laborCost" value="55000" oninput="recalc()"/>
+                </div>
+                <div class="field">
+                  <label title="Total value of inventory on hand at any time">Annual inventory value ($)</label>
+                  <input type="number" id="inventoryValue" placeholder="e.g. 10,000,000" oninput="recalc()"/>
+                </div>
+              </div>
+              <div class="field">
+                <label title="Annual spend on licenses, maintenance, and support for current inventory systems">Current IT / legacy system cost / yr ($)</label>
+                <input type="number" id="itCost" placeholder="e.g. 150,000" oninput="recalc()"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Highlight card: One-time costs -->
+          <div class="card highlight">
+            <div class="card-title">
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" style="color:var(--cyan-dark)"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              One-time investment costs
+            </div>
+            <div class="two-col">
+              <div class="field">
+                <label title="Project management, configuration, integration, and go-live support">Professional services ($)</label>
+                <input type="number" id="psvcCost" placeholder="e.g. 50,000" oninput="recalc()"/>
+              </div>
+              <div class="field">
+                <label title="Barcode scanners, mobile devices, label printers">Hardware — scanners &amp; devices ($)</label>
+                <input type="number" id="hwCost" placeholder="e.g. 30,000" oninput="recalc()"/>
+              </div>
+            </div>
+            <div class="field">
+              <label title="End-user training, change management, and adoption support">Training &amp; change management ($)</label>
+              <input type="number" id="trainCost" placeholder="e.g. 10,000" oninput="recalc()"/>
+            </div>
+            <div class="otc-total">
+              <span class="label">Total one-time cost</span>
+              <span class="value" id="totalOTC">$0</span>
+            </div>
+          </div>
+
+          <!-- Recurring + NPV rate -->
+          <div class="card">
+            <div class="card-title">Recurring investment &amp; NPV rate</div>
+            <div class="two-col">
+              <div class="field">
+                <label title="Annual SaaS subscription cost for Cloud Inventory">Annual subscription ($)</label>
+                <input type="number" id="invest" value="80000" oninput="recalc()"/>
+              </div>
+              <div class="field">
+                <label title="Your company's cost of capital or hurdle rate. Typically 8–15%.">Discount rate for NPV (%)</label>
+                <input type="number" id="discRate" value="10" oninput="recalc()" step="0.5" min="0" max="50"/>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Assumptions -->
+        <div>
+          <div class="accordion">
+            <button class="acc-head open" onclick="toggleAcc(this)">
+              <div class="acc-left">
+                <span class="acc-dot" style="background:var(--green)"></span>
+                <div>
+                  <div class="acc-title">
+                    Improvement assumptions
+                    <span class="badge badge-cyan" id="benchBadge" style="display:none;margin-left:8px;">Industry defaults</span>
+                  </div>
+                  <div class="acc-sub">Adjust benchmarks or use industry averages</div>
+                </div>
+              </div>
+              <svg class="acc-chevron" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="acc-body">
+              <div class="assumptions-header">Your estimate &nbsp;|&nbsp; Industry avg</div>
+              <div class="metric-row">
+                <span class="metric-label" title="Reduction in time spent on manual processes, rework, and counting">Labor productivity gain</span>
+                <input class="metric-input" type="number" id="m_labor" value="25" oninput="recalc()" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_labor">Avg: 25%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Reduction in inventory write-offs due to improved accuracy">Shrinkage / write-off reduction</span>
+                <input class="metric-input" type="number" id="m_shrinkage" value="40" oninput="recalc()" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_shrinkage">Avg: 40%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Reduction in carrying costs through better inventory accuracy and reduced safety stock">Carrying cost reduction</span>
+                <input class="metric-input" type="number" id="m_carrying" value="15" oninput="recalc()" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_carrying">Avg: 15%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Improvement in on-time, in-full order fulfillment rate">OTIF / order accuracy improvement</span>
+                <input class="metric-input" type="number" id="m_otif" value="10" oninput="recalc()" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_otif">Avg: 10%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Percentage of current IT/legacy costs that Cloud Inventory displaces">IT / legacy cost displaced</span>
+                <input class="metric-input" type="number" id="m_it" value="60" oninput="recalc()" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_it">Avg: 60%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Current annual inventory loss/write-off as a % of total inventory value">Current shrinkage rate (% of inventory)</span>
+                <input class="metric-input" type="number" id="m_shrinkRate" value="2" oninput="recalc()" step="0.1" min="0"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_shrinkRate">Avg: 2%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Annual cost to hold inventory: storage, insurance, obsolescence, capital cost">Carrying cost rate (% of inventory)</span>
+                <input class="metric-input" type="number" id="m_carryRate" value="25" oninput="recalc()" min="0"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_carryRate">Avg: 25%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Revenue at risk annually from late or inaccurate orders (customer penalties, lost reorders)">OTIF value at risk (% of revenue)</span>
+                <input class="metric-input" type="number" id="m_otifRisk" value="2" oninput="recalc()" step="0.1" min="0"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench" id="b_otifRisk">Avg: 2%</span>
+              </div>
+              <div class="metric-subhead">Operational diagnostic inputs</div>
+              <div class="metric-row">
+                <span class="metric-label" title="Current measured system-to-floor inventory accuracy">Current inventory accuracy</span>
+                <input class="metric-input" type="number" id="inventoryAccuracy" value="88" oninput="recalc()" step="0.1" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench">Target: 95–98%</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Percent of active SKUs/locations cycle-counted on a planned cadence">Cycle-count coverage</span>
+                <input class="metric-input" type="number" id="cycleCountCoverage" value="25" oninput="recalc()" step="1" min="0" max="100"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench">Target: 70%+</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Percent of inventory value expected to be reduced through better visibility, controls, and replenishment discipline">Excess inventory reduction</span>
+                <input class="metric-input" type="number" id="excessInventoryReduction" value="12" oninput="recalc()" step="1" min="0" max="50"/>
+                <span class="metric-unit">%</span>
+                <span class="metric-bench">Cash-release lever</span>
+              </div>
+              <div class="metric-row">
+                <span class="metric-label" title="Reactive replenishment indicates shortages are typically discovered after the constraint is already active">Replenishment discipline</span>
+                <select class="metric-input" id="replenishmentType" onchange="recalc()">
+                  <option value="reactive">Reactive</option>
+                  <option value="mixed">Mixed</option>
+                  <option value="planned">Planned</option>
+                </select>
+                <span class="metric-unit"></span>
+                <span class="metric-bench">Driver of urgency</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!-- end two-col -->
+
+      <div class="section-divider"><span class="section-divider-label">Summary results</span></div>
+      <div class="results-grid" id="roiGrid"></div>
+
+      <div class="card value-audit-card">
+        <div class="card-title">Value driver audit</div>
+        <p class="panel-note">This validates that every ROI lever is calculating from its required input fields. Rows marked as needing data are intentionally excluded from annual ROI until the required fields are populated.</p>
+        <div id="valueAuditPanel"></div>
+      </div>
+
+      <div class="section-divider"><span class="section-divider-label">Decision engine</span></div>
+      <div class="aha-grid">
+        <div class="card aha-card critical">
+          <div class="card-title">Hidden loss exposure</div>
+          <div id="lossExposurePanel"></div>
+        </div>
+        <div class="card aha-card">
+          <div class="card-title">Likely operational drivers</div>
+          <div id="diagnosticPanel"></div>
+        </div>
+        <div class="card aha-card">
+          <div class="card-title">Cost of inaction</div>
+          <div id="inactionPanel"></div>
+        </div>
+        <div class="card aha-card">
+          <div class="card-title">Benchmark gap</div>
+          <div id="benchmarkGapPanel"></div>
+        </div>
+      </div>
+
+      <div class="decision-grid">
+        <div class="card">
+          <div class="card-title">Scenario range</div>
+          <div class="scenario-band" id="scenarioBand"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Model assurance</div>
+          <div id="validationPanel"></div>
+        </div>
+      </div>
+
+      <div class="card methodology-card">
+        <div class="card-title">Calculation methodology</div>
+        <div id="methodologyPanel"></div>
+      </div>
+
+      <div class="decision-cta">
+        <div>
+          <strong>This analysis indicates material financial leakage.</strong>
+          <span>Recommended next step: validate assumptions and convert this into an implementation business case.</span>
+        </div>
+        <button class="btn btn-cta" onclick="switchTab('exec')">Build executive brief</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveScenario()">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M13 15H3a1 1 0 01-1-1V2a1 1 0 011-1h7.5L14 4.5V14a1 1 0 01-1 1z" stroke="currentColor" stroke-width="1.5"/><path d="M10 1v4H5V1M5 9h6M5 12h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Save scenario
+        </button>
+        <button class="btn btn-cta" onclick="switchTab('exec')">
+          <svg viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="12" height="14" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Executive presentation
+        </button>
+        <button class="btn btn-ghost" onclick="clearForm()">New scenario</button>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════
+         DISCOVERY GUIDE
+    ══════════════════════════════════ -->
+    <div id="tab-disc" class="pane">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Discovery guide</div>
+          <div class="page-subtitle">Use these questions on prospect calls. Answers with $ or numbers auto-sync to the calculator.</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <div class="disc-section">
+            <div class="disc-section-head"><h3>Labor &amp; productivity</h3></div>
+            <div class="disc-q"><div class="q-text">How many people touch inventory daily — warehouse, field, and office?</div><div class="q-why">Drives user count and labor savings baseline.</div><input type="text" id="dq1" placeholder="Prospect answer…" oninput="syncDisc('dq1','userCount')"/></div>
+            <div class="disc-q"><div class="q-text">What percentage of a worker's day is spent on manual counts, paper processes, or rework?</div><div class="q-why">Identifies productivity gain potential. Benchmark: 20–35%.</div><input type="text" id="dq2" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">How many hours per week does your team spend reconciling inventory discrepancies?</div><div class="q-why">Quantifies the hidden labor cost of inaccuracy.</div><input type="text" id="dq3" placeholder="Prospect answer…"/></div>
+          </div>
+          <div class="disc-section">
+            <div class="disc-section-head"><h3>Inventory accuracy &amp; shrinkage</h3></div>
+            <div class="disc-q"><div class="q-text">What is your current inventory accuracy rate, and how do you measure it?</div><div class="q-why">CI benchmark: 99.5% accuracy. Gap drives shrinkage opportunity.</div><input type="text" id="dq4" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">How much do you write off annually due to lost, misplaced, or unaccounted inventory?</div><div class="q-why">Direct shrinkage input for the model.</div><input type="text" id="dq5" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">How often do you conduct full physical counts, and how long do they take?</div><div class="q-why">Cycle count improvement = labor + downtime savings.</div><input type="text" id="dq6" placeholder="Prospect answer…"/></div>
+          </div>
+          <div class="disc-section">
+            <div class="disc-section-head"><h3>Carrying costs</h3></div>
+            <div class="disc-q"><div class="q-text">What is the total value of inventory on hand at any given time?</div><div class="q-why">Primary input for carrying cost calculation.</div><input type="text" id="dq7" placeholder="Prospect answer…" oninput="syncDisc('dq7','inventoryValue')"/></div>
+            <div class="disc-q"><div class="q-text">Do you carry safety stock to compensate for inaccurate counts?</div><div class="q-why">Excess buffer is a carrying cost that can be reduced.</div><input type="text" id="dq8" placeholder="Prospect answer…"/></div>
+          </div>
+        </div>
+        <div>
+          <div class="disc-section">
+            <div class="disc-section-head"><h3>Order accuracy &amp; OTIF</h3></div>
+            <div class="disc-q"><div class="q-text">What is your current on-time, in-full (OTIF) or order accuracy rate?</div><div class="q-why">Baseline for improvement. Industry avg improves 8–15% with CI.</div><input type="text" id="dq9" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">Do you have customer penalties or chargebacks tied to order accuracy or late shipments?</div><div class="q-why">Hard-dollar OTIF cost — directly adds to the ROI model.</div><input type="text" id="dq10" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">What percentage of orders require re-work, re-pick, or expedited shipping due to errors?</div><div class="q-why">Quantifies the true cost of fulfillment inaccuracy.</div><input type="text" id="dq11" placeholder="Prospect answer…"/></div>
+          </div>
+          <div class="disc-section">
+            <div class="disc-section-head"><h3>IT / legacy systems &amp; one-time costs</h3></div>
+            <div class="disc-q"><div class="q-text">What systems are you currently using to manage inventory?</div><div class="q-why">Identifies displacement opportunity and integration scope.</div><input type="text" id="dq12" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">What do you pay annually for licenses, maintenance, and support?</div><div class="q-why">Direct IT cost displacement input.</div><input type="text" id="dq13" placeholder="Prospect answer…" oninput="syncDisc('dq13','itCost')"/></div>
+            <div class="disc-q"><div class="q-text">What devices does your team use? Will they need replacing?</div><div class="q-why">Helps estimate hardware one-time cost.</div><input type="text" id="dq14" placeholder="Prospect answer…"/></div>
+            <div class="disc-q"><div class="q-text">How long did your last implementation take and what did it cost?</div><div class="q-why">Sets context for CI's fast time-to-value and PS cost estimate.</div><input type="text" id="dq15" placeholder="Prospect answer…"/></div>
+          </div>
+          <div class="disc-section">
+            <div class="disc-section-head"><h3>Revenue &amp; financials</h3></div>
+            <div class="disc-q"><div class="q-text">What is your annual revenue?</div><div class="q-why">Used for OTIF value-at-risk calculation.</div><input type="text" id="dq16" placeholder="Prospect answer…" oninput="syncDisc('dq16','revenue')"/></div>
+            <div class="disc-q"><div class="q-text">What hurdle rate does your finance team use for capital investment decisions?</div><div class="q-why">Used for the NPV calculation. Typically 8–15%.</div><input type="text" id="dq17" placeholder="Prospect answer…" oninput="syncDisc('dq17','discRate')"/></div>
+          </div>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-cta" onclick="switchTab('calc')">Apply to calculator →</button>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════
+         COMPETITIVE
+    ══════════════════════════════════ -->
+    <div id="tab-comp" class="pane">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Competitive displacement</div>
+          <div class="page-subtitle">Select the prospect's current solution to see the displacement narrative. It auto-appears in the executive presentation.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="field" style="max-width:380px;margin-bottom:0;">
+          <label>Current competing solution</label>
+          <select id="compSelect" onchange="renderComp()">
+            <option value="">— Select competitor —</option>
+            <option value="sap">SAP WM / Extended WH Mgmt</option>
+            <option value="rf">Legacy RF / paper-based</option>
+            <option value="oracle">Oracle WMS</option>
+            <option value="excel">Spreadsheets / manual</option>
+            <option value="erp">ERP-native inventory module</option>
+            <option value="other">Other WMS</option>
+          </select>
+        </div>
+      </div>
+      <div id="compContent">
+        <div class="empty-state">
+          <div class="empty-icon">
+            <svg width="22" height="22" viewBox="0 0 16 16" fill="none"><path d="M8 1l2 4 4.5.65-3.25 3.17.77 4.48L8 11.1l-4.02 2.2.77-4.48L1.5 5.65 6 5z" stroke="#94A3B8" stroke-width="1.4" stroke-linejoin="round"/></svg>
+          </div>
+          <p>Select a competing solution above to see the displacement narrative.</p>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════
+         EXECUTIVE PRESENTATION
+    ══════════════════════════════════ -->
+    <div id="tab-exec" class="pane">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Executive presentation</div>
+          <div class="page-subtitle">Print or export this page as a PDF to share with the prospect's leadership team.</div>
+        </div>
+        <div class="btn-row" style="margin-top:0;">
+          <button class="btn btn-primary" onclick="window.print()">
+            <svg viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="5" rx="1" stroke="currentColor" stroke-width="1.5"/><path d="M3 6H1v7h14V6h-2" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><rect x="3" y="9" width="10" height="6" rx="1" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="8.5" r="1" fill="currentColor"/></svg>
+            Print / export PDF
+          </button>
+          <button class="btn btn-cta" onclick="saveScenario()">Save scenario</button>
+          <button class="btn btn-ghost" onclick="switchTab('calc')">← Edit inputs</button>
+        </div>
+      </div>
+      <div class="exec-preview-wrap">
+        <div id="execDoc"></div>
+      </div>
+    </div>
+
+
+    <!-- ══════════════════════════════════
+         SAVED SCENARIOS
+    ══════════════════════════════════ -->
+    <div id="tab-saved" class="pane">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Saved scenarios</div>
+          <div class="page-subtitle">All scenarios are stored locally in your browser.</div>
+        </div>
+        <button class="btn btn-cta" onclick="switchTab('calc')">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M8 1v14M1 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          New scenario
+        </button>
+      </div>
+      <div class="card">
+        <ul class="scenario-list" id="scenarioList"></ul>
+      </div>
+    </div>
+
+  </main><!-- end main-content -->
+</div><!-- end app-shell -->
+
+<div class="toast" id="toast" role="status" aria-live="polite">
+  <span class="toast-dot"></span>
+  <span id="toastMsg"></span>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
